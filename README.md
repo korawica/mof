@@ -1,6 +1,51 @@
 # Modern Object Format (MOF)
 
-## Core
+**Modern Object Format (MOF)** is a human-friendly data serialization format designed
+for easy to pass to CLI.
+
+The Core principles of MOF are:
+
+- **Human-Friendly**: Easy to read and write for humans.
+- **Machine-Parsable**: Structured for easy parsing by machines.
+- **CLI Supported**: Supported by command-line tools for validation and conversion.
+
+## Why MOF?
+
+JSON is widely used but can be verbose and hard to read for complex configurations.
+
+```json
+{
+  "someKey": "someValue",
+  "someArray": [
+    {"id": 1, "name": "Item 1"},
+    {"id": 2, "name": "Item 2"},
+    {"id": 3, "name": "Item 3"}
+  ]
+}
+```
+
+YAML is more readable but can be ambiguous and lacks strict typing.
+
+```yaml
+someKey: someValue
+someArray:
+  - id: 1
+    name: Item 1
+  - id: 2
+    name: Item 2
+  - id: 3
+    name: Item 3
+```
+
+MOF Representation:
+
+```text
+{someKey:someValue;someArray{id,name}:[1,Item 1;2,Item 2;3,Item 3]}
+```
+
+## Key Features
+
+...
 
 ### SYNTAX RULES
 
