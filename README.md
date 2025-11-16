@@ -15,8 +15,9 @@ JSON is widely used but can be verbose and hard to read for complex configuratio
 
 ```json
 {
-  "someKey": "someValue",
-  "someArray": [
+  "id": "A001015",
+  "items": ["a", "b", "c"],
+  "data": [
     {"id": 1, "name": "Item 1"},
     {"id": 2, "name": "Item 2"},
     {"id": 3, "name": "Item 3"}
@@ -27,27 +28,54 @@ JSON is widely used but can be verbose and hard to read for complex configuratio
 YAML is more readable but can be ambiguous and lacks strict typing.
 
 ```yaml
-someKey: someValue
-someArray:
+id: "A001015"
+items:
+  - "a"
+  - "b"
+  - "c"
+data:
   - id: 1
-    name: Item 1
+    name: "Item 1"
   - id: 2
-    name: Item 2
+    name: "Item 2"
   - id: 3
-    name: Item 3
+    name: "Item 3"
+```
+
+TOON
+
+```toon
+id: A001015
+items[3]: a,b,c
+data[3]{id,name}:
+  1,Item 1
+  2,Item 2
+  3,Item 3
 ```
 
 MOF Representation:
 
 ```text
-{someKey:someValue;someArray{id,name}:[1,Item 1;2,Item 2;3,Item 3]}
+{id:A001015;item[a,b,c];data{id,name}:[1,Item 1;2,Item 2;3,Item 3]}
 ```
 
 ## Key Features
 
-...
+| Data Type            | MOF Syntax                                                                         | Description                       |
+|----------------------|------------------------------------------------------------------------------------|-----------------------------------|
+| String               | `key: "value"`                                                                     | Quoted or unquoted strings        |
+| Multi-line String    | `key:\|`<br>`  Line 1`<br>`  Line 2`<br>`\|`                                       | Multi-line text                   |
+| Integer              | `key: 123`                                                                         | Integer values                    |
+| Float                | `key: 3.14`                                                                        | Floating-point numbers            |
+| Boolean              | `key: true`<br>`key: false`                                                        | Boolean values                    |
+| Null                 | `key: null`                                                                        | Null value                        |
+| Date                 | `key: 2025-11-16`                                                                  | Date values                       |
+| DateTime             | `key: 2025-11-16T07:14:51Z`                                                        | DateTime values                   |
+| Object               | `key: {key1: value1, key2: value2}`                                                | Key-value pairs                   |
+| Array                | `key: [item1, item2, item3]`                                                       | List of items                     |
+| Tabular Array        | `key[N]{col1,col2}:`<br>`  row1_col1,row1_col2;`<br>`  row2_col1,row2_col2`<br>`;` | Table with N rows and columns     |
+| Environment Variable | `key: ${VAR}`<br>`key: ${VAR=default}`                                             | Environment variable substitution |
 
-### SYNTAX RULES
 
 ```text
 # 1. KEY-VALUE SEPARATOR
