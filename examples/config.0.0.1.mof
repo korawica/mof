@@ -1,0 +1,77 @@
+!mof/1.0.0 {
+  # ============================================
+  # BASIC OBJECTS (comma or newline)
+  # ============================================
+
+  # Multi-line object (newline separator)
+  config: {
+    host: localhost
+    port: 8080
+    ssl: true
+  }
+
+  # One-line object (comma separator)
+  inline: {host: localhost, port: 8080, ssl: true}
+
+  # ============================================
+  # BASIC ARRAYS (comma or newline)
+  # ============================================
+
+  # Multi-line array (newline separator)
+  items: [
+    item1
+    item2
+    item3
+  ]
+
+  # One-line array (comma separator)
+  tags: [dev, staging, prod]
+
+  # ============================================
+  # TABULAR ARRAYS (semicolon terminator)
+  # ============================================
+
+  # Multi-line tabular (newline for rows, semicolon to end block)
+  users[3]{id,name,role}:
+    1,Alice,admin
+    2,Bob,user
+    3,Carol,dev
+  ;
+
+  # One-line tabular (space/comma for rows, semicolon to end)
+  mappings[2]{from,to}: old1,new1 old2,new2;
+
+  # Or with explicit row separator
+  mappings[2]{from,to}: old1,new1|old2,new2;
+
+  # After tabular block, continue normally
+  next-config: {
+    value: 123
+  }
+
+  # ============================================
+  # NESTED STRUCTURES
+  # ============================================
+
+  transformer-conf: {
+    # Regular array
+    column-list[4]: [col1, col2, col3, col4]
+
+    # Tabular array INSIDE object (semicolon required)
+    column-renames[3]{from,to}:
+      _id,id
+      btNo,bt_no
+      rtNo,rt_no
+    ;
+
+    # Next field after tabular
+    other-setting: value
+  }
+
+  # ============================================
+  # ONE-LINE FORMAT
+  # ============================================
+
+  # Complete one-line config
+  app: {name: myapp, db: {host: localhost, port: 5432}, tags: [prod, api], users[2]{id,name}: 1,Alice 2,Bob;}
+}

@@ -1,0 +1,162 @@
+# New Config File Format Example.
+# ---
+# DataType Supported:
+#   string - use double quote and single quote for string with special character
+#     - multi-line - after key to define multi-line string
+#         - :| for keep line break with space
+#         - :> for remove line break
+#   int - support with underscore for better readability, e.g., 1_000_000
+#   float
+#   path - use <path> format
+#   array - use [item1;item2;item3] format
+#   object - use {key1::value1;key2::value2} format
+#   boolean - use true or false keyword
+#   null - use null keyword
+#   notset - use notset keyword
+#   date - ISO 8601 format date, YYYY-MM-DD
+#   datetime - ISO 8601 format datetime, YYYY-MM-DDTHH:MM:SSZ
+#   regex - use /pattern/ format like {data::/^\d{3}-\d{2}-\d{4}$/}
+#   table - use (col1,col2,col3)[row1col1:row1col2:row1col3;row2col1:row2col2:row2col3] format
+# ---
+# Feature:
+#  - support comment with # symbol
+#  - support multi-line string for complex configuration
+#  - support escape special character in string with backslash (\)
+#  - support space and tab indentation for better readability
+#  - support nested object and array for complex configuration
+#  - support variable substitution with ${VAR_NAME} syntax
+#  - support include other config file with @include <file_path> syntax
+#    like: @include::<path/to/other_config.txt::hadoop-conf>;
+#  - support versioning with !mof/<version> at the beginning of the file
+#  - support multiline by ()
+# ---
+# Examples:
+!mof/1.0.0 {
+  hadoop-conf::{
+    fs.gs.project.id::stock-data-dev-399709;
+    google.cloud.auth.type::SERVICE_ACCOUNT_JSON_KEYFILE;
+    google.cloud.auth.service.account.json.keyfile::</cred/data-platform-dev.json>
+  };
+  spark-conf::{
+    spark.sql.adaptive.enabled::true;
+    spark.sql.adaptive.coalescePartitions.enabled::true;
+    spark.sql.adaptive.advisoryPartitionSizeInBytes::512MB;
+    spark.sql.caseSensitive::true;
+    spark.sql.session.timeZone::Asia/Bangkok;
+    spark.sql.catalog.local.warehouse::<gs:://stock-dev/transforming/stock_transfer>
+  };
+  common-conf::{
+    source-directory-path::<gs:://stock/landing/stock_transfer/year={YEAR}/month={MONTH}/day={DAY}/hour={HOUR}>;
+    destination-directory-path::<gs:://stock-dev/transforming/stock_transfer>;
+    path-generator-name::datetime_path;
+    task-datetime-format::"%Y-%m-%d %H::%M::%S%z";
+    source-reader-name::json;
+    source-reader-options::{multiline::false};
+    transformer-operator::"column_flatten_transformer,column_select_transformer,custom_sql_transformer,column_rename_transformer,define_datatype_transformer";
+    saver-name::iceberg;
+    saver-write-mode::append
+  };
+  iceberg-options::{
+    table-name::transforming_stock_transfer;
+    operation::upsert;
+    partition-by::updated_date;
+    primary-key::[rt_no;branch_code;sku_code;barcode;tote_code];
+    matched-column::[*];
+    ingest-date-column::last_modified_datetime;
+    precombined-field::"last_modified_datetime,sequence_item";
+    table-property::{
+      history.expire.max-snapshot-age-ms::86400000;
+      write.distribution.mode::hash;
+      write.target-file-size-bytes::536870912;
+      commit.manifest.min-count-to-merge::10;
+      write.metadata.delete-after-commit.enabled::TRUE;
+      write.metadata.previous-versions-max::10
+    }
+  };
+  transformer-conf::{
+    column-flatten-list::[itemGroups;items;usedTruckDC;executor];
+    column-selection-list::[_id;btNo;rtNo;branchCode;startDate;endDate;branchFrom;branchTo];
+    custom-sql-file::<gs:://stock-dev/configs/stock_transfer/extract_date.sql>;
+    custom-sql-query:|
+      INSERT INTO custom_sql_table AS
+      SELECT
+        *,
+        CAST(SUBSTRING(startDate, 1, 10) AS DATE) AS startDate,
+        CAST(SUBSTRING(endDate, 1, 10) AS DATE) AS endDate
+      FROM custom_sql_table;
+      DELETE FROM custom_sql_table WHERE rtNo IS NULL;
+    ;
+    column-rename-list::[
+      "_id::id";
+      "btNo::bt_no";
+      "rtNo::rt_no";
+      "branchCode::branch_code";
+      "startDate::start_date";
+      "endDate::end_date";
+      "branchFrom::branch_from";
+      "branchTo::branch_to"
+    ];
+    schema-type-list::[
+      {id::StringType};
+      {bt_no::StringType};
+      {rt_no::StringType};
+      {branch_code::StringType}};
+      {start_date::"DateType(yyyy-MM-dd)"};
+      {end_date::"DateType(yyyy-MM-dd)"};
+      {branch_from::StringType};
+      {branch_to::StringType}
+    ];
+    schema-write::[
+      {
+        name::id;
+        datatype::String;
+        nullable::false
+      };
+      {
+          name::bt_no;
+          datatype::String;
+          nullable::true
+      };
+      {
+          name::rt_no;
+          datatype::String;
+          nullable::false
+      };
+      {
+          name::branch_code;
+          datatype::String;
+          nullable::false
+      };
+      {
+          name::start_date;
+          datatype::Date;
+          nullable::true
+      };
+      {
+          name::end_date;
+          datatype::Date;
+          nullable::true
+      };
+      {
+          name::branch_from;
+          datatype::String;
+          nullable::true
+      };
+      {
+          name::branch_to;
+          datatype::String;
+          nullable::true
+      }
+    ];
+    schema-write-table::(name,datatype,nullable)[
+      id:String:false;
+      bt_no:String:true;
+      rt_no:String:false;
+      branch_code:String:false;
+      start_date:Date:true;
+      end_date:Date:true;
+      branch_from:String:true;
+      branch_to:String:true
+    ]
+  }
+}

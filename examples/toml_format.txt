@@ -1,0 +1,148 @@
+# MOF (Modern Object Format) v1.0.0
+# TOON-Enhanced: Best of both worlds for Data Engineers
+# - TOON's tabular efficiency for uniform arrays
+# - Config-specific features (variables, secrets, includes)
+
+!mof/1.0.0 {
+  # ============================================
+  # INCLUDES
+  # ============================================
+  @include: @path(../common/hadoop-defaults.mof) => hadoop-conf,
+  @include: @path(../common/spark-defaults.mof) => spark-conf,
+  @include: @path(secrets/${ENV}.mof) => secrets,
+
+  # ============================================
+  # ENVIRONMENT
+  # ============================================
+  env: {
+    project-id: ${GCS_PROJECT_ID=stock-data-dev-399709},
+    bucket: ${GCS_BUCKET=stock-dev},
+    environment: ${ENVIRONMENT=dev}
+  },
+
+  # ============================================
+  # HADOOP CONFIGURATION
+  # ============================================
+  hadoop-conf: {
+    "fs.gs.project.id": ${env.project-id},
+    "google.cloud.auth.type": "SERVICE_ACCOUNT_JSON_KEYFILE",
+    "google.cloud.auth.service.account.json.keyfile": @secret(GCS_SERVICE_ACCOUNT_KEY)
+  },
+
+  # ============================================
+  # SPARK CONFIGURATION
+  # ============================================
+  spark-conf: {
+    "spark.sql.adaptive.enabled": true,
+    "spark.sql.adaptive.coalescePartitions.enabled": true,
+    "spark.sql.adaptive.advisoryPartitionSizeInBytes": 536_870_912,
+    "spark.sql.caseSensitive": true,
+    "spark.sql.session.timeZone": "Asia/Bangkok",
+    "spark.sql.catalog.local.warehouse": @path(gs://${env.bucket}/transforming/stock_transfer)
+  },
+
+  # ============================================
+  # COMMON CONFIGURATION
+  # ============================================
+  common-conf: {
+    source-directory-path: @path(gs://${env.bucket}/landing/stock_transfer/year={YEAR}/month={MONTH}/day={DAY}/hour={HOUR}),
+    source-reader-name: "json",
+    source-reader-options: {multiline: false},
+    destination-directory-path: @path(gs://${env.bucket}/transforming/stock_transfer),
+    path-generator-name: "datetime_path",
+    task-datetime-format: "%Y-%m-%d %H:%M:%S%z",
+
+    # TOON-style tabular array (NEW!)
+    transformer-operator[5]: [
+      "column_flatten_transformer",
+      "column_select_transformer",
+      "custom_sql_transformer",
+      "column_rename_transformer",
+      "define_datatype_transformer"
+    ],
+
+    saver-name: "iceberg",
+    saver-write-mode: "append"
+  },
+
+  # ============================================
+  # ICEBERG OPTIONS
+  # ============================================
+  iceberg-options: {
+    table-name: "transforming_stock_transfer",
+    operation: "upsert",
+    partition-by: "updated_date",
+    primary-key[5]: ["rt_no", "branch_code", "sku_code", "barcode", "tote_code"],
+    matched-column[1]: ["*"],
+    ingest-date-column: "last_modified_datetime",
+    precombined-field[2]: ["last_modified_datetime", "sequence_item"],
+
+    table-property: {
+      "history.expire.max-snapshot-age-ms": 86_400_000,
+      "write.distribution.mode": "hash",
+      "write.target-file-size-bytes": 536_870_912,
+      "commit.manifest.min-count-to-merge": 10,
+      "write.metadata.delete-after-commit.enabled": true,
+      "write.metadata.previous-versions-max": 10
+    }
+  },
+
+  # ============================================
+  # TRANSFORMER CONFIGURATION
+  # ============================================
+  transformer-conf: {
+    # Simple arrays with length
+    column-flatten-list[4]: ["itemGroups", "items", "usedTruckDC", "executor"],
+    column-selection-list[8]: [
+      "_id", "btNo", "rtNo", "branchCode",
+      "startDate", "endDate", "branchFrom", "branchTo"
+    ],
+
+    custom-sql-file: @path(gs://${env.bucket}/configs/stock_transfer/extract_date.sql),
+
+    custom-sql-query: |
+      INSERT INTO custom_sql_table AS
+      SELECT
+        *,
+        CAST(SUBSTRING(startDate, 1, 10) AS DATE) AS startDate,
+        CAST(SUBSTRING(endDate, 1, 10) AS DATE) AS endDate
+      FROM custom_sql_table;
+      DELETE FROM custom_sql_table WHERE rtNo IS NULL;
+    |,
+
+    # TOON-STYLE TABULAR FORMAT (NEW! Most efficient)
+    column-rename-list[8]{from,to}:
+      _id,id
+      btNo,bt_no
+      rtNo,rt_no
+      branchCode,branch_code
+      startDate,start_date
+      endDate,end_date
+      branchFrom,branch_from
+      branchTo,branch_to
+    ,
+
+    # Alternative: Traditional array of objects (still supported)
+    schema-type-list[8]: [
+      {column: "id", type: "StringType"},
+      {column: "bt_no", type: "StringType"},
+      {column: "rt_no", type: "StringType"},
+      {column: "branch_code", type: "StringType"},
+      {column: "start_date", type: "DateType(yyyy-MM-dd)"},
+      {column: "end_date", type: "DateType(yyyy-MM-dd)"},
+      {column: "branch_from", type: "StringType"},
+      {column: "branch_to", type: "StringType"}
+    ],
+
+    # TOON-STYLE TABULAR (Best for Data Engineers!)
+    schema-write[8]{name,datatype,nullable}:
+      id,String,false
+      bt_no,String,true
+      rt_no,String,false
+      branch_code,String,false
+      start_date,Date,true
+      end_date,Date,true
+      branch_from,String,true
+      branch_to,String,true
+  }
+}
