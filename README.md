@@ -3,11 +3,10 @@
 **Modern Object Format (MOF)** is a human-friendly data serialization format designed
 for easy to pass to CLI.
 
-The Core principles of MOF are:
+**Core Principles**:
 
-- **Human-Friendly**: Easy to read and write for humans.
-- **Machine-Parsable**: Structured for easy parsing by machines.
-- **CLI Supported**: Supported by command-line tools for validation and conversion.
+- 👀 **Human-Friendly**: Easy to read and write for humans.
+- ⚙️ **Machine-Parsable**: Structured for easy parsing by machines.
 
 ## Why MOF?
 
@@ -56,7 +55,26 @@ data[3]{id,name}:
 MOF Representation:
 
 ```text
-{id:A001015;item[a,b,c];data{id,name}:[1,Item 1;2,Item 2;3,Item 3]}
+{
+  id: A001015;
+  item: [a; b; c];
+  data{id,name}: [
+    1, Item 1;
+    2, Item 2;
+    3, Item 3
+  ];
+  active: true;
+}
+```
+
+```text
+{id:A001015;item[a,b,c];data{id,name}:[1,Item 1;2,Item 2;3,Item 3];active:true}
+```
+
+So, with this format, you can use with CLI tools more effectively.
+
+```shell
+command --config "{id:A001015;item[a,b,c];data{id,name}:[1,Item 1;2,Item 2;3,Item 3];active:true}"
 ```
 
 ## Key Features
