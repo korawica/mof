@@ -29,3 +29,14 @@
 ```text
 !mof/1.0.0 { project="mkt"; mapping=(src,dst)[id,uid; name,uname]; }
 ```
+
+---
+
+Nested Fields in Tables
+
+```text
+jobs = (id, name, config:timeout, config:retry) [
+    1, "Cleanup", 30, 1;
+    2, "Ingest",  60, 3;
+];
+```
