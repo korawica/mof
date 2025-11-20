@@ -12,7 +12,8 @@ for easy to pass to CLI.
 
 JSON is widely used but can be verbose and hard to read for complex configurations.
 
-```json
+```json5
+// Token: 82
 {
   "id": "A001015",
   "items": ["a", "b", "c"],
@@ -20,13 +21,15 @@ JSON is widely used but can be verbose and hard to read for complex configuratio
     {"id": 1, "name": "Item 1"},
     {"id": 2, "name": "Item 2"},
     {"id": 3, "name": "Item 3"}
-  ]
+  ],
+  "active": true
 }
 ```
 
 YAML is more readable but can be ambiguous and lacks strict typing.
 
 ```yaml
+# Token: 74
 id: "A001015"
 items:
   - "a"
@@ -39,22 +42,26 @@ data:
     name: "Item 2"
   - id: 3
     name: "Item 3"
+active: true
 ```
 
 TOON
 
 ```toon
+# Token: 49
 id: A001015
 items[3]: a,b,c
 data[3]{id,name}:
   1,Item 1
   2,Item 2
   3,Item 3
+active: true
 ```
 
 MOF Representation:
 
 ```text
+# Token: 56
 {
   id: A001015;
   item: [a; b; c];
