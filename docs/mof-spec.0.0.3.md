@@ -158,7 +158,7 @@ Map Data เข้ากับ Header Cache ทันที (Row by Row)
 Nested Fields in Tables
 
 ```text
-jobs = (id, name, config:timeout, config:retry) [
+jobs = (id, name, config.timeout, config.retry) [
     1, "Cleanup", 30, 1;
     2, "Ingest",  60, 3;
 ];

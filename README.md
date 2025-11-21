@@ -8,6 +8,9 @@ for easy to pass to CLI.
 - 👀 **Human-Friendly**: Easy to read and write for humans.
 - ⚙️ **Machine-Parsable**: Structured for easy parsing by machines.
 
+> [!WARNING]
+> This project is just a draft new file format, `mof`, only.
+
 ## Why MOF?
 
 JSON is widely used but can be verbose and hard to read for complex configurations.
@@ -82,6 +85,23 @@ So, with this format, you can use with CLI tools more effectively.
 
 ```shell
 command --config "{id=A001015;item=[a;b;c];data=(id,name)[1,Item 1;2,Item 2;3,Item 3];active=true}"
+```
+
+## Syntax
+
+| Data Type          | Syntax            | Description                             | Example                                          |
+|--------------------|-------------------|-----------------------------------------|--------------------------------------------------|
+| String (Unquoted)  | `...`             | Simple string without spaces            | `key = value;`                                   |
+| String (Quoted)    | `"..."`           | Standard string with escape sequences   | `id = "A001015";`                                |
+| String (Raw)       | `\|...\|`         | Simple key-value pair                   | `query = \|SELECT * FROM "users"\|;`             |
+| Number             | `123`, `45.67`    | Integer or floating-point number        | `timeout = 30;`                                  |
+| Boolean            | `true`, `false`   | Boolean values                          | `active = true;`                                 |
+| Array              | `[ ... ]`         | List of values                          | `items = [a; b; c];`                             |
+| Object             | `{ ... }`         | Key-value pairs                         | `config = { key = value; };`                     |
+| Table              | `( ... ) [ ... ]` | Tabular data with headers               | `data = (id,name) [1,Item 1;2,Item 2;3,Item 3];` |
+
+```text
+
 ```
 
 ## License
